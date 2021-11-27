@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
   if (server_socket_id == -1)
   {
-    printf("Could not create socket");
+    printf("Could not create a socket");
   }
   puts("Socket created");
 
@@ -25,25 +25,26 @@ int main(int argc, char *argv[])
   puts("Bind succeded");
 
   listen(server_socket_id, 3);
-  puts("Waiting for incoming connections...");
+  
   int server_socket_structure_size = sizeof(struct sockaddr_in);
   
   while (1) {
+    puts("Waiting for incoming connections...");
     int client_socket_id = accept(server_socket_id, (struct sockaddr *)&client, (socklen_t *)&server_socket_structure_size);
     if (client_socket_id < 0) {
       perror("Accept failed");
       return 1;
     }
-    puts("Connection accepted");
-    close(server_socket_id);
+    printf("Connection accepted new client socket id: %d \n", client_socket_id);  
     if ((child_pid = fork()) == 0) {
       int read_size;
       int sum = 0;
       int client_active = 1;
-      while (client_active && (read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
+      while ((read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
           int client_number;
           sscanf(message_buffer, "%d", &client_number);          
           if (client_number != STOP_NUMBER) {
+              printf("Сlient with id %d sent number: %d \n", client_socket_id, client_number);  
               sum = sum + client_number;
               char string_buffer[100]; // output string buffer
               sprintf(string_buffer, "%d", sum);
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
               puts("Finish work");
               write(client_socket_id, TERMINATE_MESSAGE, strlen(TERMINATE_MESSAGE));
               client_active = 0;
+              break;
           }
       }
       if (client_active){
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
       }
       close(client_socket_id);
     }
-  } 
+  }
+  close(server_socket_id); 
   exit(0);
 }
