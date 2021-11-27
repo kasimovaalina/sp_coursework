@@ -1,20 +1,11 @@
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <stdlib.h>
+#include "essentials.h"
 
 
 int main(int argc, char *argv[])
 {
   struct sockaddr_in server, client;
-  int MESSAGE_BUFFER_CAPACITY = 2000;
   char message_buffer[MESSAGE_BUFFER_CAPACITY];
   pid_t child_pid;
-  char TERMINATE_MESSAGE[1] = "0";
-  int STOP_NUMBER = 0;
   int server_socket_id = socket(AF_INET, SOCK_STREAM, 0);
 
   if (server_socket_id == -1)
@@ -25,7 +16,7 @@ int main(int argc, char *argv[])
 
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
-  server.sin_port = htons(8888);
+  server.sin_port = htons(PORT);
 
   if (bind(server_socket_id, (struct sockaddr *)&server, sizeof(server)) < 0) {
     perror("Bind failed. Error");
