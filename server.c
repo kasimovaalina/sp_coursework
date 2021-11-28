@@ -4,7 +4,7 @@ int start(){
   
   struct socket_data socket_info;
 
-  if (prepare_server_socket(&socket_info) == 0){
+  if (prepare_sockets(&socket_info, PORT) == 0){
     return 1;
   }
 
@@ -64,7 +64,7 @@ int start(){
   exit(0);
 }
 
-int prepare_server_socket(struct socket_data *prepared_socket){
+int prepare_sockets(struct socket_data *prepared_socket, int port){
   (*prepared_socket).server_socket_id = socket(AF_INET, SOCK_STREAM, 0);
   if ((*prepared_socket).server_socket_id == -1) {
     printf("Could not create a socket");
@@ -74,7 +74,7 @@ int prepare_server_socket(struct socket_data *prepared_socket){
   //(*prepared_socket).client;
   (*prepared_socket).server.sin_family = AF_INET;
   (*prepared_socket).server.sin_addr.s_addr = INADDR_ANY;
-  (*prepared_socket).server.sin_port = htons(PORT);
+  (*prepared_socket).server.sin_port = htons(port);
 
   if (bind((*prepared_socket).server_socket_id, (struct sockaddr *)&(*prepared_socket).server, sizeof((*prepared_socket).server)) < 0) {
     perror("Bind failed. Error");
