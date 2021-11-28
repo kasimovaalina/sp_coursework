@@ -13,7 +13,9 @@ int start(){
 
   while (1) {
     puts("Waiting for incoming connections...");
-    int client_socket_id = accept(socket_info.server_socket_id, (struct sockaddr *)&socket_info.client, (socklen_t *)&server_socket_structure_size);
+    int client_socket_id = accept(socket_info.server_socket_id, 
+                                  (struct sockaddr *)&socket_info.client, 
+                                  (socklen_t *)&server_socket_structure_size);
 
     if (client_socket_id < 0) {
       perror("Accept failed");
@@ -21,11 +23,13 @@ int start(){
     }
 
     printf("Connection accepted new client socket id: %d \n", client_socket_id);  
+
     if ((child_pid = fork()) == 0) {
       int read_size;
       int sum = 0;
       int client_active = 1;
       char message_buffer[MESSAGE_BUFFER_CAPACITY];
+      
       while ((read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
           int client_number;
           sscanf(message_buffer, "%d", &client_number);          
