@@ -1,18 +1,14 @@
-#include "commons.h"
+#include "client.h"
 
-int main(int argc, char *argv[])
-{
-  int client_scoket_id;
-  struct sockaddr_in server_socket;
-  char message[1000], server_reply[MESSAGE_BUFFER_CAPACITY];
-  int server_reply_number;
-
-  client_scoket_id = socket(AF_INET, SOCK_STREAM, 0);
+int start(){
+  int client_scoket_id = socket(AF_INET, SOCK_STREAM, 0);
   if (client_scoket_id == -1)  {
-    printf("Could not create socket");
+    puts("Could not create socket");
+    return 1;
   }
-  puts("Socket created");
-
+  puts("Client socked successfully created");
+  
+  struct sockaddr_in server_socket;
   server_socket.sin_addr.s_addr = inet_addr(ADDRESS);
   server_socket.sin_family = AF_INET;
   server_socket.sin_port = htons(PORT);
@@ -21,35 +17,60 @@ int main(int argc, char *argv[])
     perror("Connection failed. Error");
     return 1;
   }
+  puts("Connection estabilished");
 
-  puts("Connected\n");
+  int buffer_length = MESSAGE_BUFFER_CAPACITY;
+  char buffer[buffer_length];
 
+  int server_reply_number;
+  int session_close_code = 0;
+  int last_reply_code;
   while (1) {
-    memset(server_reply, 0, MESSAGE_BUFFER_CAPACITY);
-    printf("Enter number : ");
-    scanf("%s", message);
-
-    if (send(client_scoket_id, message, strlen(message), 0) < 0) {
-      puts("Send failed");
-      return 1;
+    if (send_message_to_server(&client_scoket_id, buffer, &buffer_length) != 0){
+       session_close_code = 1;
+       break;
     }
-
-    if (recv(client_scoket_id, server_reply, MESSAGE_BUFFER_CAPACITY, 0) < 0) {
-      puts("recv failed");
-      break;
+    if ((last_reply_code = read_message_from_server(&client_scoket_id, buffer, &buffer_length, &server_reply_number)) != 0){
+       if (last_reply_code < 0){
+          session_close_code = 1;
+       }
+       break;
     }
-    
-    sscanf(server_reply, "%d", &server_reply_number);
-    if (server_reply_number == 0){
-      puts("End");
-      close(client_scoket_id);
-      return 0;
-    }
-
-    puts("Server reply :");
-    puts(server_reply);
   }
 
   close(client_scoket_id);
-  return 0;
+  return session_close_code;
+}
+
+int send_message_to_server(int *socket_id, char * buffer, int *buffer_length){
+    memset(buffer, 0, *buffer_length);
+    printf("Enter number : ");
+    scanf("%s", buffer);
+
+    if (send(*socket_id, buffer, strlen(buffer), 0) < 0) {
+      puts("Failed to send message to server");
+      return 1;
+    }
+    return 0;
+} 
+
+int read_message_from_server(int *socket_id, char *buffer, int *buffer_length, int *server_reply_number){
+    memset(buffer, 0, *buffer_length);
+
+   if (recv(*socket_id, buffer, *buffer_length, 0) < 0) {
+      puts("Failed to get server reply");
+      return -1;
+    }
+    
+    sscanf(buffer, "%d", server_reply_number);
+    if (*server_reply_number == 0){
+      puts("Close session");
+      return 1;
+    }
+    printf("Server reply : %d\n", *server_reply_number);
+    return 0;
+} 
+
+int main(int argc, char *argv[]) { 
+   return start();
 }

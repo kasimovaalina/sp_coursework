@@ -3,17 +3,14 @@
 
 int main(int argc, char *argv[])
 {
-  struct sockaddr_in server, client;
-  char message_buffer[MESSAGE_BUFFER_CAPACITY];
-  pid_t child_pid;
+  // prepare server socket
   int server_socket_id = socket(AF_INET, SOCK_STREAM, 0);
-
-  if (server_socket_id == -1)
-  {
+  if (server_socket_id == -1) {
     printf("Could not create a socket");
   }
   puts("Socket created");
 
+  struct sockaddr_in server, client;
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(PORT);
@@ -27,7 +24,7 @@ int main(int argc, char *argv[])
   listen(server_socket_id, 3);
   
   int server_socket_structure_size = sizeof(struct sockaddr_in);
-  
+  pid_t child_pid;
   while (1) {
     puts("Waiting for incoming connections...");
     int client_socket_id = accept(server_socket_id, (struct sockaddr *)&client, (socklen_t *)&server_socket_structure_size);
@@ -40,6 +37,7 @@ int main(int argc, char *argv[])
       int read_size;
       int sum = 0;
       int client_active = 1;
+      char message_buffer[MESSAGE_BUFFER_CAPACITY];
       while ((read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
           int client_number;
           sscanf(message_buffer, "%d", &client_number);          
