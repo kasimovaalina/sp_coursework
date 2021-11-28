@@ -71,7 +71,6 @@ int prepare_sockets(struct socket_data *prepared_socket, int port){
   }
   puts("Socket created");
 
-  //(*prepared_socket).client;
   (*prepared_socket).server.sin_family = AF_INET;
   (*prepared_socket).server.sin_addr.s_addr = INADDR_ANY;
   (*prepared_socket).server.sin_port = htons(port);
