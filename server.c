@@ -29,8 +29,9 @@ int start(){
       int sum = 0;
       int client_active = 1;
       char message_buffer[MESSAGE_BUFFER_CAPACITY];
-      
+
       while ((read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
+          
           int client_number;
           sscanf(message_buffer, "%d", &client_number);          
           if (client_number != STOP_NUMBER) {
