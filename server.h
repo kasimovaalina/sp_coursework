@@ -6,4 +6,4 @@ struct socket_data{
     struct sockaddr_in client;
 };
 
-int prepare_sockets(struct socket_data *prepared_socket, int port);
+int initialize_sockets(struct socket_data *prepared_socket, int port);
