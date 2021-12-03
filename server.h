@@ -7,3 +7,5 @@ struct socket_data{
 };
 
 int initialize_sockets(struct socket_data *prepared_socket, int port);
+
+void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity);

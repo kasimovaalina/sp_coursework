@@ -25,31 +25,11 @@ int start(){
     printf("Connection accepted new client socket id: %d \n", client_socket_id);  
 
     if ((child_pid = fork()) == 0) {
+      
       int read_size;
-      int sum = 0;
       int client_active = 1;
-      char message_buffer[MESSAGE_BUFFER_CAPACITY];
 
-      while ((read_size = recv(client_socket_id, message_buffer, MESSAGE_BUFFER_CAPACITY, 0)) > 0){
-          
-          int client_number;
-          sscanf(message_buffer, "%d", &client_number);          
-          if (client_number != STOP_NUMBER) {
-              printf("Сlient with id %d sent number: %d \n", client_socket_id, client_number);  
-              sum = sum + client_number;
-              char string_buffer[100]; // output string buffer
-              sprintf(string_buffer, "%d", sum);
-              write(client_socket_id, string_buffer, strlen(string_buffer));
-              memset(message_buffer, 0, MESSAGE_BUFFER_CAPACITY);
-          } else {
-              // finish session
-              memset(message_buffer, 0, MESSAGE_BUFFER_CAPACITY);
-              printf("Client %d finished session", client_socket_id);
-              write(client_socket_id, TERMINATE_MESSAGE, strlen(TERMINATE_MESSAGE));
-              client_active = 0;
-              break;
-          }
-      }
+      handle_message(&read_size, &client_socket_id, &client_active, MESSAGE_BUFFER_CAPACITY);
 
       if (client_active){
           puts("Client finished session");
@@ -89,6 +69,31 @@ int initialize_sockets(struct socket_data *prepared_socket, int port){
   listen((*prepared_socket).server_socket_id, 3);
   
   return 1;
+}
+
+void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity){
+      int sum = 0;
+      char message_buffer[message_buffer_capacity];
+
+      while (((*read_size) = recv((*client_socket_id), message_buffer, message_buffer_capacity, 0)) > 0){
+        int client_number;
+        sscanf(message_buffer, "%d", &client_number);          
+        if (client_number != STOP_NUMBER) {
+            printf("Сlient with id %d sent number: %d \n", (*client_socket_id), client_number);  
+            sum = sum + client_number;
+            char string_buffer[100]; // output string buffer
+            sprintf(string_buffer, "%d", sum);
+            write((*client_socket_id), string_buffer, strlen(string_buffer));
+            memset(message_buffer, 0, message_buffer_capacity);
+        } else {
+            // finish session
+            memset(message_buffer, 0, message_buffer_capacity);
+            printf("Client %d finished session/n", (*client_socket_id));
+            write((*client_socket_id), TERMINATE_MESSAGE, strlen(TERMINATE_MESSAGE));
+            (*client_active) = 0;
+            break;
+        }
+    }
 }
 
 
