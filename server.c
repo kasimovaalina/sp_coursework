@@ -11,6 +11,9 @@ int start(){
   int server_socket_structure_size = sizeof(struct sockaddr_in);
   pid_t child_pid;
 
+  void* shmem = create_shared_memory(64);
+  int initial_value = 0;
+  memcpy(shmem, &initial_value, sizeof(int));
   while (1) {
     puts("Waiting for incoming connections...");
     int client_socket_id = accept(socket_info.server_socket_id, 
@@ -29,7 +32,7 @@ int start(){
       int read_size;
       int client_active = 1;
 
-      handle_message(&read_size, &client_socket_id, &client_active, MESSAGE_BUFFER_CAPACITY);
+      handle_message(&read_size, &client_socket_id, &client_active, MESSAGE_BUFFER_CAPACITY, shmem);
 
       if (client_active){
           puts("Client finished session");
@@ -47,6 +50,16 @@ int start(){
   }
   close(socket_info.server_socket_id); 
   exit(0);
+}
+
+void* create_shared_memory(size_t size) {
+  // Our memory buffer will be readable and writable
+  // The buffer will be shared (meaning other processes can access it), but
+  // anonymous (meaning third-party processes cannot obtain an address for it),
+  // so only this process and its children will be able to use it:
+  int protection = PROT_READ | PROT_WRITE;
+  int visibility = MAP_SHARED | MAP_ANONYMOUS;
+  return mmap(NULL, size, protection, visibility, -1, 0);
 }
 
 int initialize_sockets(struct socket_data *prepared_socket, int port){
@@ -71,24 +84,28 @@ int initialize_sockets(struct socket_data *prepared_socket, int port){
   return 1;
 }
 
-void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity){
-      int sum = 0;
+void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity, void* shared_memory){
       char message_buffer[message_buffer_capacity];
-
       while (((*read_size) = recv((*client_socket_id), message_buffer, message_buffer_capacity, 0)) > 0){
         int client_number;
         sscanf(message_buffer, "%d", &client_number);          
         if (client_number != STOP_NUMBER) {
+            int total = -1;
+            puts("Try to read total value from shared mem");
+            memcpy(&total, shared_memory, sizeof(int));
             printf("Сlient with id %d sent number: %d \n", (*client_socket_id), client_number);  
-            sum = sum + client_number;
-            char string_buffer[100]; // output string buffer
-            sprintf(string_buffer, "%d", sum);
-            write((*client_socket_id), string_buffer, strlen(string_buffer));
+            total += client_number;
+            memset(message_buffer, 0, message_buffer_capacity);
+            sprintf(message_buffer, "%d", total);
+            write((*client_socket_id), message_buffer, strlen(message_buffer));
+            printf("Update total value with %d\n", total);
+            memcpy(shared_memory, &total, sizeof(int));
+            puts("Clean buffer");
             memset(message_buffer, 0, message_buffer_capacity);
         } else {
             // finish session
             memset(message_buffer, 0, message_buffer_capacity);
-            printf("Client %d finished session/n", (*client_socket_id));
+            printf("Client %d finished session\n", (*client_socket_id));
             write((*client_socket_id), TERMINATE_MESSAGE, strlen(TERMINATE_MESSAGE));
             (*client_active) = 0;
             break;
@@ -97,7 +114,6 @@ void handle_message(int *read_size, int *client_socket_id, int *client_active, i
 }
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
   start();
 }

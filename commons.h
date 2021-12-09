@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 #define MESSAGE_BUFFER_CAPACITY 2000
 #define STOP_NUMBER 0

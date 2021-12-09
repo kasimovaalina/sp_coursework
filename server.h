@@ -6,6 +6,8 @@ struct socket_data{
     struct sockaddr_in client;
 };
 
+void* create_shared_memory(size_t size);
+
 int initialize_sockets(struct socket_data *prepared_socket, int port);
 
-void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity);
+void handle_message(int *read_size, int *client_socket_id, int *client_active, int message_buffer_capacity, void* shared_memory);
